@@ -12,6 +12,7 @@ Cohort: evSD3
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 readFile = pd.read_csv('SOFT8032A3/weather.csv')
 
@@ -59,33 +60,50 @@ def  task1():
 #task1()    
     
 def task2():
+
+    """
+    analyze the effect of the difference in air pressure between 9 am and 3 pm and rainfall the next day
+    """
     
+   # Drop rows with missing values in 'Pressure9am' and 'Pressure3pm'
     cleanRow = readFile.dropna(subset=['Pressure9am', 'Pressure3pm', 'RainTomorrow'])
 
     # Calculate the difference in pressure between 9 am and 3 pm
     cleanRow['PressureDiff'] = cleanRow['Pressure9am'] - cleanRow['Pressure3pm']
 
+    # Create lists to store results
+    pressure_diffs = []
+    rainy_to_non_rainy_ratios = []
+
     # Iterate over the range of differences [1, 12]
-    # for D in range(1, 13):
-    #     # Extract rows with the minimum difference D
-    #     min_diff_rows = cleanRow[cleanRow['PressureDiff'] == D]
+    for D in range(1, 13):
+        # Extract rows with the minimum difference D
+        min_diff_rows = cleanRow[cleanRow['PressureDiff'] == D]
 
-    #     # Calculate the number of rainy and non-rainy days
-    #     rainy_days = min_diff_rows[min_diff_rows['RainTomorrow'] == 'Yes'].shape[0]
-    #     non_rainy_days = min_diff_rows[min_diff_rows['RainTomorrow'] == 'No'].shape[0]
+        # Calculate the number of rainy days and non-rainy days
+        rainy_days = min_diff_rows[min_diff_rows['RainTomorrow'] == 'Yes'].shape[0]
+        non_rainy_days = min_diff_rows[min_diff_rows['RainTomorrow'] == 'No'].shape[0]
 
-    #     # Calculate the ratio of rainy to non-rainy days
-    #     ratio = rainy_days / non_rainy_days if non_rainy_days != 0 else 0
+        # Calculate the ratio of rainy to non-rainy days
+        ratio = rainy_days / non_rainy_days if non_rainy_days != 0 else 0
 
-        # Print the results for each D
-        print("For D =", D)
-        print("Number of rainy days:", rainy_days)
-        print("Number of non-rainy days:", non_rainy_days)
-        print("Ratio of rainy to non-rainy days:", ratio)
-        print("-------------------------")
-task2()
+        # Append results to lists
+        pressure_diffs.append(D)
+        rainy_to_non_rainy_ratios.append(ratio)
 
-#def task3():
+    # Create a bar plot
+    plt.bar(pressure_diffs, rainy_to_non_rainy_ratios, color='blue', alpha=0.7)
+    plt.xlabel('Minimum Pressure Difference (D)')
+    plt.ylabel('Number of Rainy Days / Number of Non-Rainy Days')
+    plt.title('Effect of Pressure Difference on Rainfall')
+    plt.xticks(pressure_diffs)
+    plt.show()
+
+################################## WRONG #######################################
+        
+#task2()
+
+def task3():
     
     
         
