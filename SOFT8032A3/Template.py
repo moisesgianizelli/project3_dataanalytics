@@ -26,6 +26,8 @@ from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import cross_val_score
+from sklearn.preprocessing import OneHotEncoder, LabelEncoder
+
 
 
 
@@ -213,71 +215,85 @@ def task3():
     plt.show()
  ###########################giving error   
 #task3()        
+
 def task4():
-    # attributes_pressure = ['Pressure9am', 'Pressure3pm', 'RainTomorrow']
-    # attributes_wind = ['WindDir3pm', 'WindDir9am', 'RainTomorrow']
 
-    # # Model using Pressure attributes
-    # X_pressure = readFile[attributes_pressure].dropna().drop('RainTomorrow', axis=1)
-    # y_pressure = readFile[attributes_pressure].dropna()['RainTomorrow']
-    # X_train_pressure, X_test_pressure, y_train_pressure, y_test_pressure = train_test_split(X_pressure, y_pressure, test_size=0.33, random_state=42)
+    # Create a sub-dataset with the specified attributes
+    otherDataSet = readFile[[
+        'WindDir9am',
+        'WindDir3pm',
+        'Pressure9am',
+        'Pressure3pm',
+        'RainTomorrow'
+    ]]
 
-    # # Model using Wind attributes
-    # X_wind = readFile[attributes_wind].dropna().drop('RainTomorrow', axis=1)
-    # y_wind = readFile[attributes_wind].dropna()['RainTomorrow']
-    # X_train_wind, X_test_wind, y_train_wind, y_test_wind = train_test_split(X_wind, y_wind, test_size=0.33, random_state=42)
+    # first question (a)
+    xpressure = otherDataSet[['Pressure9am', 'Pressure3pm']]
+    y = otherDataSet['RainTomorrow']
+    label_encoder = LabelEncoder()
+    yencoded = label_encoder.fit_transform(y)
 
-    # # Decision Tree Classifier
-    # clf_pressure = DecisionTreeClassifier(random_state=42)
-    # clf_wind = DecisionTreeClassifier(random_state=42)
+    # Split the dataset
+    xpressureTrainning, xtestPressure, ytrain, ytest = train_test_split(xpressure, yencoded, test_size=0.33, random_state=42)
 
-    # # Train the models
-    # clf_pressure.fit(X_train_pressure, y_train_pressure)
-    # clf_wind.fit(X_train_wind, y_train_wind)
+    # Decision Tree Classifier and train the model
+    pressureModel = DecisionTreeClassifier(random_state=42, max_depth=20)
+    pressureModel.fit(xpressureTrainning, ytrain)
 
-    # # Predictions
-    # y_pred_train_pressure = clf_pressure.predict(X_train_pressure)
-    # y_pred_test_pressure = clf_pressure.predict(X_test_pressure)
+    # Print
+    print("\nUsing Pressure as Ordinary Attributes:")
+    print("Training Accuracy:", f"{pressureModel.score(xpressureTrainning, ytrain):.5f}")
+    print("Test Accuracy:", f"{pressureModel.score(xtestPressure, ytest):.5f}")
 
-    # y_pred_train_wind = clf_wind.predict(X_train_wind)
-    # y_pred_test_wind = clf_wind.predict(X_test_wind)
+    # second question (b)
+    # repeat the process
+    xwindDirection = otherDataSet[['WindDir9am', 'WindDir3pm']]
+    encoder = OneHotEncoder(sparse=False)
+    xwindEncoded = encoder.fit_transform(xwindDirection)
 
-    # # Calculate accuracies
-    # accuracy_train_pressure = accuracy_score(y_train_pressure, y_pred_train_pressure)
-    # accuracy_test_pressure = accuracy_score(y_test_pressure, y_pred_test_pressure)
+    # Split the dataset again
+    xtrainWind, xtestWind, ytrain, ytest = train_test_split(xwindEncoded, yencoded, test_size=0.33, random_state=42)
 
-    # accuracy_train_wind = accuracy_score(y_train_wind, y_pred_train_wind)
-    # accuracy_test_wind = accuracy_score(y_test_wind, y_pred_test_wind)
+    # Decision Tree and train model
+    windModelDir = DecisionTreeClassifier(random_state=42, max_depth=20)
+    windModelDir.fit(xtrainWind, ytrain)
 
-    # print("Accuracy using Pressure attributes:")
-    # print(f"Training Accuracy: {accuracy_train_pressure:.2f}")
-    # print(f"Test Accuracy: {accuracy_test_pressure:.2f}\n")
+    # Print 
+    print("\nUsing Wind Direction as Ordinary Attributes:")
+    print("Training Accuracy:", f"{windModelDir.score(xtrainWind, ytrain):.5f}")
+    print("Test Accuracy:", f"{windModelDir.score(xtestWind, ytest):.5f}")
 
-    # print("Accuracy using Wind attributes:")
-    # print(f"Training Accuracy: {accuracy_train_wind:.2f}")
-    # print(f"Test Accuracy: {accuracy_test_wind:.2f}")
-    print("test")
+
+    """
+    Using Pressure as Ordinary Attributes:
+    - Training Accuracy: 0.77585
+    - Test Accuracy: 0.75170
+
+     Using Wind Direction as Ordinary Attributes:
+    - Training Accuracy: 0.75984
+    - Test Accuracy: 0.75547
+
+    Considering the test accuracy as a key metric, the model utilizing Wind Direction attributes seems more effective for predicting RainTomorrow
+    compared to the model using Pressure attributes.
+    """
     
 
 #task4()
 def task5():
     # Create a sub-DataFrame with more diverse samples
-    sub_df = pd.DataFrame({
+    otherDf = pd.DataFrame({
         'RainTomorrow': ['Yes', 'No', 'No', 'Yes', 'No', 'Yes', 'No', 'No', 'Yes', 'No'],
         'WindDir9am': ['NW', 'W', 'E', 'NW', 'NE', 'SW', 'SE', 'S', 'N', 'W'],
         'WindGustDir': ['W', 'E', 'W', 'NW', 'NE', 'SW', 'SE', 'S', 'N', 'W'],
         'WindDir3pm': ['NW', 'E', 'SW', 'NW', 'NE', 'S', 'N', 'W', 'SW', 'SE']
     })
 
-    # Convert 'RainTomorrow' to a categorical variable
-    sub_df['RainTomorrow'] = sub_df['RainTomorrow'].astype('category')
-
-    # One-hot encode categorical variables
-    sub_df = pd.get_dummies(sub_df, columns=['WindDir9am', 'WindGustDir', 'WindDir3pm'], drop_first=True)
+    otherDf['RainTomorrow'] = otherDf['RainTomorrow'].astype('category')
+    otherDf = pd.get_dummies(otherDf, columns=['WindDir9am', 'WindGustDir', 'WindDir3pm'], drop_first=True)
 
     # Lists to store training and test accuracy for Decision Tree Classifier
-    tree_train_accuracy = []
-    tree_test_accuracy = []
+    trainAcc = []
+    trainTestAcc = []
 
     # Loop over different depths for Decision Tree Classifier
     for depth in range(1, 11):
@@ -285,11 +301,11 @@ def task5():
         tree_clf = DecisionTreeClassifier(max_depth=depth, random_state=42)
 
         # Perform cross-validation and store averages
-        train_scores = cross_val_score(tree_clf, sub_df.drop('RainTomorrow', axis=1), sub_df['RainTomorrow'], cv=5)
-        tree_train_accuracy.append(train_scores.mean())
+        train_scores = cross_val_score(tree_clf, otherDf.drop('RainTomorrow', axis=1), otherDf['RainTomorrow'], cv=5)
+        trainAcc.append(train_scores.mean())
 
-        test_scores = cross_val_score(tree_clf, sub_df.drop('RainTomorrow', axis=1), sub_df['RainTomorrow'], cv=5)
-        tree_test_accuracy.append(test_scores.mean())
+        test_scores = cross_val_score(tree_clf, otherDf.drop('RainTomorrow', axis=1), otherDf['RainTomorrow'], cv=5)
+        trainTestAcc.append(test_scores.mean())
 
     # Lists to store training and test accuracy for KNeighborsClassifier
     knn_train_accuracy = []
@@ -301,10 +317,10 @@ def task5():
         knn_clf = KNeighborsClassifier(n_neighbors=neighbors)
 
         # Perform cross-validation and store averages
-        train_scores = cross_val_score(knn_clf, sub_df.drop('RainTomorrow', axis=1), sub_df['RainTomorrow'], cv=5)
+        train_scores = cross_val_score(knn_clf, otherDf.drop('RainTomorrow', axis=1), otherDf['RainTomorrow'], cv=5)
         knn_train_accuracy.append(train_scores.mean())
 
-        test_scores = cross_val_score(knn_clf, sub_df.drop('RainTomorrow', axis=1), sub_df['RainTomorrow'], cv=5)
+        test_scores = cross_val_score(knn_clf, otherDf.drop('RainTomorrow', axis=1), otherDf['RainTomorrow'], cv=5)
         knn_test_accuracy.append(test_scores.mean())
 
     # Generate plots
@@ -312,8 +328,8 @@ def task5():
 
     # Plot Decision Tree Classifier accuracy
     plt.subplot(2, 1, 1)
-    plt.plot(range(1, 11), tree_train_accuracy, label='Decision Tree Training Accuracy')
-    plt.plot(range(1, 11), tree_test_accuracy, label='Decision Tree Test Accuracy')
+    plt.plot(range(1, 11), trainAcc, label='Decision Tree Training Accuracy')
+    plt.plot(range(1, 11), trainTestAcc, label='Decision Tree Test Accuracy')
     plt.title('Decision Tree Classifier Accuracy vs. Depth')
     plt.xlabel('Depth')
     plt.ylabel('Accuracy')
@@ -327,48 +343,61 @@ def task5():
     plt.xlabel('Number of Neighbors')
     plt.ylabel('Accuracy')
     plt.legend()
-
-    # Show the plots
     plt.tight_layout()
     plt.show()
 
+
 ########################### fix and take conclusions
-task5()
+#task5()
 
 def task6():
 
     # Select the specified columns
-    selected_columns = ['MinTemp', 'MaxTemp', 'WindSpeed9am', 'WindSpeed3pm',
+    columns = ['MinTemp', 'MaxTemp', 'WindSpeed9am', 'WindSpeed3pm',
                          'Humidity9am', 'Humidity3pm', 'Pressure9am', 'Pressure3pm',
                          'Rainfall', 'Temp9am', 'Temp3pm']
 
-    # Create a new DataFrame with selected columns
-    selected_df = readFile[selected_columns]
+    # new data frame and handle any non-numerical values
+    newDataFrame = readFile[columns]
+    newDataFrame = newDataFrame.apply(pd.to_numeric, errors='coerce')
+    newDataFrame = newDataFrame.dropna()
 
-    # Check for and handle any non-numerical values
-    selected_df = selected_df.apply(pd.to_numeric, errors='coerce')
-    selected_df = selected_df.dropna()
-
-    # Apply standard scaling to the data
+    # standard scaling to the data
     scaler = StandardScaler()
-    scaled_df = scaler.fit_transform(selected_df)
+    scaled = scaler.fit_transform(newDataFrame)
 
-    # (a) Apply K-Means clustering on the dataset using various numbers of clusters
-    cluster_range = range(2, 9)
+    # question a - Apply K-Means clustering on the dataset using various numbers of clusters
+    cluster = range(2, 9)
     inertias = []
 
-    for n_clusters in cluster_range:
-        kmeans = KMeans(n_clusters=n_clusters, random_state=42)
-        kmeans.fit(scaled_df)
+    for clusters in cluster:
+        kmeans = KMeans(n_clusters=clusters, random_state=42)
+        kmeans.fit(scaled)
         inertias.append(kmeans.inertia_)
 
     # (b) Utilize an appropriate visualization method to determine the optimal number of clusters
-    plt.plot(cluster_range, inertias, marker='o')
+    plt.plot(cluster, inertias, marker='o')
     plt.title('Elbow Method for Optimal K')
     plt.xlabel('Number of Clusters (K)')
     plt.ylabel('Inertia')
     plt.show()
-####################################### FIXING THE CODE AND TAKE CONCLUSIONS
+
+    """
+    The plot shows the trade-off between the number of clusters and the within-cluster sum of squares (Inertia).
+    # As K increases, Inertia generally decreases, as each cluster becomes more tightly packed.
+    # The "elbow" in the plot represents a point where the rate of decrease of Inertia slows down, indicating diminishing returns.
+
+    K=2 to K=3: Inertia decreases from 1 to 0.85
+    K=3 to K=4: Inertia decreases from 0.85 to 0.76
+    K=4 to K=5: Inertia decreases from 0.76 to 0.74
+    K=5 to K=6: Inertia decreases from 0.76 to 0.68
+    K=6 to K=7: Inertia decreases from 0.68 to 0.64
+    K=7 to K=8: Inertia decreases from 0.64 to 0.60
+
+    the elbow point is between K2 and K3 (decrease significantly)
+
+    """
+
 #task6()
     
     
