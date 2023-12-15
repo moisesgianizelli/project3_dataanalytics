@@ -123,7 +123,7 @@ def task2():
         ratio1 = rainyDays / nonRainyDays if nonRainyDays != 0 else 0
         hypothesis1.append({'D': D, 'RainyToNonRainyRatio': ratio1})
 
-        # Hypothesis 2: Check for a threshold effect
+        # Hypothesis 2
         ratio2 = rainyDays / nonRainyDays if nonRainyDays != 0 and D > 5 else 0
         hypothesis2.append({'D': D, 'RainyToNonRainyRatio': ratio2})
 
@@ -131,7 +131,7 @@ def task2():
     result1 = pd.DataFrame(hypothesis1)
     result2 = pd.DataFrame(hypothesis2)
 
-    # Plot the results for Hypothesis 1
+    # Results for Hypothesis 1
     plt.figure(figsize=(12, 6))
     plt.subplot(1, 2, 1)
     plt.plot(result1['D'], result1['RainyToNonRainyRatio'], marker='o', linestyle='-')
@@ -140,7 +140,7 @@ def task2():
     plt.title('Effect of Pressure Difference on Rainfall (Hypothesis 1)')
     plt.grid(True)
 
-    # Plot the results for Hypothesis 2
+    # Results for Hypothesis 2
     plt.subplot(1, 2, 2)
     plt.plot(result2['D'], result2['RainyToNonRainyRatio'], marker='o', linestyle='-')
     plt.xlabel('Pressure Difference (D)')
@@ -214,7 +214,7 @@ def task3():
     plt.legend()
     plt.show()
  ###########################giving error   
-#task3()        
+task3()        
 
 def task4():
 
@@ -298,18 +298,18 @@ def task5():
     # Loop over different depths for Decision Tree Classifier
     for depth in range(1, 11):
         # Initialize Decision Tree Classifier
-        tree_clf = DecisionTreeClassifier(max_depth=depth, random_state=42)
+        tree = DecisionTreeClassifier(max_depth=depth, random_state=42)
 
         # Perform cross-validation and store averages
-        train_scores = cross_val_score(tree_clf, otherDf.drop('RainTomorrow', axis=1), otherDf['RainTomorrow'], cv=5)
-        trainAcc.append(train_scores.mean())
+        trainScore = cross_val_score(tree, otherDf.drop('RainTomorrow', axis=1), otherDf['RainTomorrow'], cv=5)
+        trainAcc.append(trainScore.mean())
 
-        test_scores = cross_val_score(tree_clf, otherDf.drop('RainTomorrow', axis=1), otherDf['RainTomorrow'], cv=5)
-        trainTestAcc.append(test_scores.mean())
+        scores = cross_val_score(tree, otherDf.drop('RainTomorrow', axis=1), otherDf['RainTomorrow'], cv=5)
+        trainTestAcc.append(scores.mean())
 
     # Lists to store training and test accuracy for KNeighborsClassifier
-    knn_train_accuracy = []
-    knn_test_accuracy = []
+    trainAcc = []
+    testAcc = []
 
     # Loop over different numbers of neighbors for KNeighborsClassifier
     for neighbors in range(1, 11):
@@ -317,16 +317,16 @@ def task5():
         knn_clf = KNeighborsClassifier(n_neighbors=neighbors)
 
         # Perform cross-validation and store averages
-        train_scores = cross_val_score(knn_clf, otherDf.drop('RainTomorrow', axis=1), otherDf['RainTomorrow'], cv=5)
-        knn_train_accuracy.append(train_scores.mean())
+        trainScore = cross_val_score(knn_clf, otherDf.drop('RainTomorrow', axis=1), otherDf['RainTomorrow'], cv=5)
+        trainAcc.append(trainScore.mean())
 
-        test_scores = cross_val_score(knn_clf, otherDf.drop('RainTomorrow', axis=1), otherDf['RainTomorrow'], cv=5)
-        knn_test_accuracy.append(test_scores.mean())
+        scores = cross_val_score(knn_clf, otherDf.drop('RainTomorrow', axis=1), otherDf['RainTomorrow'], cv=5)
+        testAcc.append(scores.mean())
 
     # Generate plots
     plt.figure(figsize=(10, 8))
 
-    # Plot Decision Tree Classifier accuracy
+    # Decision Tree 
     plt.subplot(2, 1, 1)
     plt.plot(range(1, 11), trainAcc, label='Decision Tree Training Accuracy')
     plt.plot(range(1, 11), trainTestAcc, label='Decision Tree Test Accuracy')
@@ -335,10 +335,10 @@ def task5():
     plt.ylabel('Accuracy')
     plt.legend()
 
-    # Plot KNeighborsClassifier accuracy
+    # KNeighborsClassifier 
     plt.subplot(2, 1, 2)
-    plt.plot(range(1, 11), knn_train_accuracy, label='KNN Training Accuracy')
-    plt.plot(range(1, 11), knn_test_accuracy, label='KNN Test Accuracy')
+    plt.plot(range(1, 11), trainAcc, label='KNN Training Accuracy')
+    plt.plot(range(1, 11), testAcc, label='KNN Test Accuracy')
     plt.title('KNeighbors Classifier Accuracy vs. Number of Neighbors')
     plt.xlabel('Number of Neighbors')
     plt.ylabel('Accuracy')
@@ -410,14 +410,14 @@ def task7():
     Feature selection considers meteorological factors known to influence temperature.
     The interpretability of regression models provides insights into the relationship between selected features and temperature.
     """
-   # Select relevant features and target variable
+   # Relevant features
     features = ['MinTemp', 'Rainfall', 'Evaporation', 'Sunshine', 'WindGustSpeed', 'Humidity9am', 'Humidity3pm', 'Pressure9am', 'Pressure3pm', 'Cloud9am', 'Cloud3pm', 'Temp9am', 'RainToday']
     target = 'MaxTemp'
     file = readFile[features + [target]].dropna()
     X = file[features]
     y = file[target]
 
-    # Split the dataset into training and testing sets and create a pipeline
+    # Split the dataset 
     xtrain, xtest, ytrain, ytest = train_test_split(X, y, test_size=0.2, random_state=42)
     columns = ["RainToday"]
     preprocessor = ColumnTransformer(
@@ -432,7 +432,7 @@ def task7():
     ])
     pipeline.fit(xtrain, ytrain)
 
-    # Predictions on the test set 
+    # Predictions
     ypred = pipeline.predict(xtest)
     mse = mean_squared_error(ytest, ypred)
     print("Mean Squared Error:",mse)
