@@ -3,7 +3,6 @@
 """
 Created on 29/11/2023
 
-
 Name: Moises Munaldi
 Student ID: R00225292
 Cohort: evSD3
@@ -52,10 +51,10 @@ def  task1():
     fewest records or rows. Present the percentage for each section and perform all necessary data cleaning.
     """
 
-    # if there is missing values
+    #  missing values
     cleanRow = readFile.dropna(subset=['Location'])
 
-    # string format if necessary
+    # string format 
     # cleanRow['Location'] = cleanRow['Location'].astype(str)
 
     # Reformating the data
@@ -72,6 +71,18 @@ def  task1():
     print("***********")
     print("Percentage:")
     print(percentage)
+
+    plt.figure(figsize=(10, 6))
+    plt.bar(topFive.index, topFive.values, color='skyblue', alpha=0.7, label='Top 5 Locations')
+
+    for i, value in enumerate(topFive.values):
+        plt.text(i, value + 1, f"{percentage[i]}%", ha='center', va='bottom', fontsize=8)
+
+    plt.xlabel('Location')
+    plt.ylabel('Number of Records')
+    plt.title('Top 5 Locations with Fewest Records')
+    plt.legend()
+    plt.show()
 
 
 #task1()    
@@ -179,42 +190,61 @@ def task2():
 
 def task3():
 
-    """
-   
-    """
+    attributes = ['WindSpeed9am', 'WindSpeed3pm', 'Humidity9am', 'Humidity3pm', 'Pressure9am', 'Temp9am', 'Temp3pm', 'RainTomorrow']
+    otherDf = readFile[attributes]
 
+    # Exclude non-numeric columns when calculating the mean
+    numcollumns = otherDf.select_dtypes(include=['number']).columns
+    means = otherDf[numcollumns].mean(skipna=True)
 
-    depths = list(range(1, 36))
-    feature_importance_results = {attribute: [] for attribute in ["WindSpeed9am", "WindSpeed3pm", "Humidity9am", "Humidity3pm", "Pressure9am", "Temp9am", "Temp3pm"]}
+    # Replace non-numeric columns with NaN in the mean calculation
+    for col in otherDf.columns:
+        if col not in numcollumns:
+            means[col] = float('nan')
 
-    # Loop over different maximum depths
-    for depth in depths:
-        # Initialize decision tree classifier with the current maximum depth
-        clf = DecisionTreeClassifier(max_depth=depth)
-        
-        # Use all data as training (no need to split)
-        X = readFile.drop(columns=["RainTomorrow"])
-        y = readFile["RainTomorrow"]
-        
-        # Train the model
-        clf.fit(X, y)
-        
-        # Store feature importance for the current depth
-        for attribute in feature_importance_results:
-            feature_importance_results[attribute].append(clf.feature_importances_[X.columns.get_loc(attribute)])
+    # Fill NaN values with the mean of each column
+    otherDf = otherDf.fillna(means)
 
-    # Visualize the results
-    plt.figure(figsize=(12, 8))
-    for attribute in feature_importance_results:
-        plt.plot(depths, feature_importance_results[attribute], label=attribute)
+    # Separate features (X) and target variable (y)
+    X = otherDf.drop('RainTomorrow', axis=1)
+    y = otherDf['RainTomorrow']
+    label_encoder = LabelEncoder()
+    yencoded = label_encoder.fit_transform(y)
 
-    plt.xlabel('Maximum Depth')
+    # Initialize a decision tree classifier
+    clf = DecisionTreeClassifier(random_state=42)
+    columns = ['Max Depth'] + X.columns.tolist()
+    results = pd.DataFrame(columns=columns)
+
+    # loop
+    upper_range = 36
+    for i in range(1, upper_range):
+        clf.set_params(max_depth=i)   
+        clf.fit(X, yencoded)
+        row = [i] + list(clf.feature_importances_)
+        results.loc[len(results) + 1] = row
+
+    plt.figure(figsize=(10, 6))
+
+    for feature in results.columns.drop('Max Depth'):
+        plt.plot(results['Max Depth'], results[feature], label=feature)
+
+    plt.xlabel('Max Depth')
     plt.ylabel('Feature Importance')
-    plt.title('Impact of Maximum Depth on Feature Importance in Decision Tree')
+    plt.title('Feature Importances vs Max Depth of Decision Tree')
     plt.legend()
+    plt.tight_layout()
     plt.show()
- ###########################giving error   
-task3()        
+
+    """
+    Executing the code a graphic appears, illustrating the correlation between feature importance and the maximum depth of the three.
+    - It indicates that the "Humidity3pm" feature significantly outweighs others in predicting the likelihood of rainfall on the following day
+    - About maximum depth, it shows singularly holds importance, signified by a value of 1.
+    - The decision tree is singularly focused on a solitary decision. As the maximum depth increases, the influence of humidity at 3 pm gradually diminishes.
+    """
+
+
+#task3()        
 
 def task4():
 
@@ -297,13 +327,10 @@ def task5():
 
     # Loop over different depths for Decision Tree Classifier
     for depth in range(1, 11):
-        # Initialize Decision Tree Classifier
+        # Initialize Decision Tree Classifier and perform cross-validation and store averages
         tree = DecisionTreeClassifier(max_depth=depth, random_state=42)
-
-        # Perform cross-validation and store averages
         trainScore = cross_val_score(tree, otherDf.drop('RainTomorrow', axis=1), otherDf['RainTomorrow'], cv=5)
         trainAcc.append(trainScore.mean())
-
         scores = cross_val_score(tree, otherDf.drop('RainTomorrow', axis=1), otherDf['RainTomorrow'], cv=5)
         trainTestAcc.append(scores.mean())
 
@@ -346,8 +373,17 @@ def task5():
     plt.tight_layout()
     plt.show()
 
+    
+    """
+    This question follows same format as the previous one, the goal here is to perform a machine learning experiment using the Decision Tree Classifier and the K-Nearest Neighbors (KNN) Classifier on a sub-DataFrame containing specific attributes.
+    -	Loop over different depths (1 to 10) for Decision Tree Classifier.
+    -	Initialize the Decision Tree Classifier with the specified depth.
+    -	Perform cross-validation
+    Repeat the process for KNeighborsClassifier Training and print them to compare the trend of training and test accuracies.
+    The output tho I dont know if its wrong because decision tree graph shows two lines and Kneighbors graph shows only one (a junction of those two lines). My interpretation is somehow a improved training accuracy and KNN lines could highlight a depth value where the Decision Tree's overfitting starts. But I might be wrong because I didnt get all requirements in this task.
 
-########################### fix and take conclusions
+    """
+
 #task5()
 
 def task6():
@@ -447,7 +483,7 @@ def task7():
     The output: Small dots form a crescent line, it implies a positive correlation between the predicted and actual temperatures, we conclue that this correlation suggests that the machine learning model, trained on the provided dataset, is performing well in predicting temperatures.
     """
 
-#task7()
+task7()
 
 
 
